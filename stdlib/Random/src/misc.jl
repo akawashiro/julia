@@ -71,7 +71,7 @@ function randstring end
 
 let b = UInt8['0':'9';'A':'Z';'a':'z']
     global randstring
-    randstring(r::AbstractRNG, chars=b, n::Integer=8) = String(rand(r, chars, n))
+    randstring(r::AbstractRNG, chars=b, n::Integer=8) = String(rand!(r, Base.StringVector(n), chars))
     randstring(r::AbstractRNG, n::Integer) = randstring(r, b, n)
     randstring(chars=b, n::Integer=8) = randstring(default_rng(), chars, n)
     randstring(n::Integer) = randstring(default_rng(), b, n)
