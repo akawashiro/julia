@@ -55,10 +55,14 @@ struct OptimizationParams
 
     function OptimizationParams(;
             inlining::Bool = inlining_enabled(),
-            inline_cost_threshold::Int = 100,
-            inline_nonleaf_penalty::Int = 1000,
-            inline_tupleret_bonus::Int = 250,
-            inline_error_path_cost::Int = 20,
+            # inline_cost_threshold::Int = 100,
+            inline_cost_threshold::Int = OPTUNA_OPTIMIZATION_INLINE_COST_THRESHOLD,
+            # inline_nonleaf_penalty::Int = 1000,
+            inline_nonleaf_penalty::Int = OPTUNA_OPTIMIZATION_INLINE_NONLEAF_PENALTY,
+            # inline_tupleret_bonus::Int = 250,
+            inline_tupleret_bonus::Int = OPTUNA_OPTIMIZATION_INLINE_TUPLERET_BONUS,
+            # inline_error_path_cost::Int = 20,
+            inline_error_path_cost::Int = OPTUNA_OPTIMIZATION_INLINE_ERROR_PATH_COST,
             max_methods::Int = 3,
             tuple_splat::Int = 32,
             union_splitting::Int = 4,
