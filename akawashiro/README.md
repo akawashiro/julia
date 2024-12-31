@@ -26,3 +26,7 @@ $ sudo perf report --input nbody_compile_no.profile --no-children -Mintel
 `jl_is_gotonode(stmt)` とかが遅い
 
 https://github.com/JuliaLang/julia/issues/1064
+
+https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://ipsj.ixsq.nii.ac.jp/ej/%3Faction%3Drepository_action_common_download%26item_id%3D16575%26item_no%3D1%26attribute_id%3D1%26file_no%3D1&ved=2ahUKEwiRm77lx9GKAxWJrlYBHQgPOygQFnoECD0QAQ&usg=AOvVaw2DXt1pR5HQqncAHvZrPHP5
+
+https://www.abap34.com/posts/jci_00.html
