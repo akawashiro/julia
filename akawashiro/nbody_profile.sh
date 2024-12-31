@@ -6,7 +6,7 @@ FLAMEGRAPH_DIR=/tmp/FlameGraph
 
 cd ${root_dir}
 
-if [ -d akawashiro/FlameGraph ]; then
+if [ -d ${FLAMEGRAPH_DIR} ]; then
     echo "FlameGraph already exists"
 else
     git clone https://github.com/brendangregg/FlameGraph ${FLAMEGRAPH_DIR}
