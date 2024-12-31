@@ -26,11 +26,11 @@ function run()
         body2_vel += body2_acc * time_step
         body1_pos += body1_vel * time_step
         body2_pos += body2_vel * time_step
-        # if step % 1000 == 0
-        #     println("Step: ", step)
-        #     println("Body 1 position: ", body1_pos)
-        #     println("Body 2 position: ", body2_pos)
-        # end
+        if step % 1000 == 0
+            println("Step: ", step)
+            println("Body 1 position: ", body1_pos)
+            println("Body 2 position: ", body2_pos)
+        end
     end
 end
 
