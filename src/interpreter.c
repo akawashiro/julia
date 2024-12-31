@@ -463,6 +463,7 @@ void debug_print(const char* format, ...) {
 
 static jl_value_t *eval_body(jl_array_t *stmts, interpreter_state *s, size_t ip, int toplevel)
 {
+    debug_print("%s:%d eval_body\n", __FILE_NAME__, __LINE__);
     jl_handler_t __eh;
     size_t ns = jl_array_nrows(stmts);
     jl_task_t *ct = jl_current_task;
