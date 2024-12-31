@@ -8,11 +8,14 @@ Ruby の JIT での高速化は 2~3倍程度である。
 ```
 $ ../julia --version
 julia version 1.11.2
-$ time ../julia nbody.jl 1> /dev/null
-../julia nbody.jl > /dev/null  1.28s user 0.19s system 91% cpu 1.598 total
-$ time ../julia --compile=no --compiled-modules=no nbody.jl 1> /dev/null
-...
-../julia --compile=no --compiled-modules=no nbody.jl > /dev/null  82.30s user 0.23s system 100% cpu 1:22.43 total
+$ hyperfine '../julia nbody.jl 1> /dev/null'
+Benchmark 1: ../julia nbody.jl 1> /dev/null
+  Time (mean ± σ):      1.510 s ±  0.143 s    [User: 1.476 s, System: 0.140 s]
+  Range (min … max):    1.375 s …  1.873 s    10 runs
+$ hyperfine '../julia --compile=no --compiled-modules=no nbody.jl 1> /dev/null'
+Benchmark 1: ../julia --compile=no --compiled-modules=no nbody.jl 1> /dev/null
+  Time (mean ± σ):     98.725 s ± 19.581 s    [User: 98.403 s, System: 0.314 s]
+  Range (min … max):   78.084 s … 133.442 s    10 runs
 ```
 
 ```
@@ -21,3 +24,5 @@ $ sudo perf report --input nbody_compile_no.profile --no-children -Mintel
 ```
 
 `jl_is_gotonode(stmt)` とかが遅い
+
+https://github.com/JuliaLang/julia/issues/1064
