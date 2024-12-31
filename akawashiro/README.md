@@ -19,3 +19,5 @@ $ time ../julia --compile=no --compiled-modules=no nbody.jl 1> /dev/null
 $ sudo ./nbody_profile.sh
 $ sudo perf report --input nbody_compile_no.profile --no-children -Mintel
 ```
+
+`jl_is_gotonode(stmt)` とかが遅い
