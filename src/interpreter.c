@@ -15,6 +15,17 @@
 extern "C" {
 #endif
 
+void debug_print(const char* format, ...) {
+    const char *log_env = getenv("JULIA_DEBUG_LOG");
+    if(log_env){
+        va_list args;
+        va_start(args, format);
+        vprintf(format, args);
+        va_end(args);
+        fflush(stdout);
+    }
+}
+
 typedef struct {
     jl_code_info_t *src; // contains the names and number of slots
     jl_method_instance_t *mi; // MethodInstance we're executing, or NULL if toplevel
@@ -178,6 +189,7 @@ static void eval_stmt_value(jl_value_t *stmt, interpreter_state *s)
 
 static jl_value_t *eval_value(jl_value_t *e, interpreter_state *s)
 {
+    debug_print("%s:%d eval_value\n", __FILE_NAME__, __LINE__);
     jl_code_info_t *src = s->src;
     if (jl_is_ssavalue(e)) {
         ssize_t id = ((jl_ssavalue_t*)e)->id - 1;
@@ -448,17 +460,6 @@ static size_t eval_phi(jl_array_t *stmts, interpreter_state *s, size_t ns, size_
         JL_GC_POP();
     }
     return ip;
-}
-
-void debug_print(const char* format, ...) {
-    const char *log_env = getenv("JULIA_DEBUG_LOG");
-    if(log_env){
-        va_list args;
-        va_start(args, format);
-        vprintf(format, args);
-        va_end(args);
-        fflush(stdout);
-    }
 }
 
 static jl_value_t *eval_body(jl_array_t *stmts, interpreter_state *s, size_t ip, int toplevel)
