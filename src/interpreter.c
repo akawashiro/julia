@@ -1,6 +1,7 @@
 // This file is a part of Julia. License is MIT: https://julialang.org/license
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <setjmp.h>
 #ifdef _OS_WINDOWS_
 #include <malloc.h>
@@ -447,6 +448,17 @@ static size_t eval_phi(jl_array_t *stmts, interpreter_state *s, size_t ns, size_
         JL_GC_POP();
     }
     return ip;
+}
+
+void debug_print(const char* format, ...) {
+    const char *log_env = getenv("JULIA_DEBUG_LOG");
+    if(log_env){
+        va_list args;
+        va_start(args, format);
+        vprintf(format, args);
+        va_end(args);
+        fflush(stdout);
+    }
 }
 
 static jl_value_t *eval_body(jl_array_t *stmts, interpreter_state *s, size_t ip, int toplevel)
