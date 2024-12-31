@@ -13,7 +13,7 @@ else
 fi
 
 # Profile julia with JIT compile
-ENABLE_JITPROFILING=1 perf record -F 99 -a --call-graph dwarf -k 1 -o ${SCRIPT_DIR}/nbody.profile -- time ./julia ${SCRIPT_DIR}/nbody.jl
+ENABLE_JITPROFILING=1 perf record -F 99 -a --call-graph dwarf -k 1 -o ${SCRIPT_DIR}/nbody.profile -- time ${ROOT_DIR}/julia ${SCRIPT_DIR}/nbody.jl
 perf inject --jit --input ${SCRIPT_DIR}/nbody.profile --output ${SCRIPT_DIR}/nbody.jit.profile
 perf script --input ${SCRIPT_DIR}/nbody.jit.profile | ${FLAMEGRAPH_DIR}/stackcollapse-perf.pl > ${SCRIPT_DIR}/nbody.perf-folded
 ${FLAMEGRAPH_DIR}/flamegraph.pl ${SCRIPT_DIR}/nbody.perf-folded > ${SCRIPT_DIR}/nbody.svg
