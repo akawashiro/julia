@@ -87,7 +87,7 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
 
         text = program_name
         if e - s > 100:
-            text += f" ({e - s} sec)"
+            text += f" ({e - s} sec) (PID: {p.pid})"
         ax.annotate(
             text,
             (cx, cy),
