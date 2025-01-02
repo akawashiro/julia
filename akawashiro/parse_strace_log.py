@@ -51,6 +51,7 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
     fig, ax = plt.subplots(dpi=100, figsize=(128, 6))
     ax.set_xlim(0, max_time - offset_time)
     ax.set_xlabel("Time (sec)")
+    ax.set_xticks(range(0, max_time - offset_time, 100))
     ax.set_ylim(0, max_vcpu)
     ax.set_yticks([])
 
