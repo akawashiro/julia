@@ -15,7 +15,7 @@ function run()
     
     time_step = 0.1
     
-    for step in 1:10000
+    for step in 1:1000
         r = body2_pos - body1_pos
         r_norm = norm(r)
         r_hat = r / r_norm
