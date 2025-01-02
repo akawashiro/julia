@@ -104,54 +104,7 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
     fig.savefig(image_file)
 
 
-def generate_trace_json(processes: list[Process]) -> str:
-    processes = list(filter(lambda p: p.end_time > p.start_time, processes))
-
-    trace = []
-    offset_time = 1 << 32
-
-    dummy_pids: dict[str, int] = {}
-
-    for p in processes:
-        s = p.start_time * 1000
-        e = p.end_time * 1000
-        if p.program not in dummy_pids:
-            dummy_pids[p.program] = len(dummy_pids)
-        dummy_pid = dummy_pids[p.program]
-
-        offset_time = min(offset_time, s)
-        trace.append(
-            {
-                "name": p.program,
-                "cat": p.program,
-                "ts": s,
-                "ph": "B",
-                "pid": dummy_pid,
-                "tid": p.pid,
-                "args": {},
-            }
-        )
-        trace.append(
-            {
-                "name": p.program,
-                "cat": p.program,
-                "ph": "E",
-                "ts": e,
-                "pid": dummy_pid,
-                "tid": p.pid,
-                "args": {},
-            }
-        )
-    for t in trace:
-        t["ts"] -= offset_time
-    trace_json = {
-        "traceEvents": trace,
-        "displayTimeUnit": "ms",
-    }
-    return json.dumps(trace_json, indent=4)
-
-
-def main(log_file: str, output_json: str, output_image: str) -> None:
+def main(log_file: str, output_image: str) -> None:
     # pid -> Process
     processes: dict[int, Process] = {}
     with open(log_file, "r") as f:
@@ -178,9 +131,6 @@ def main(log_file: str, output_json: str, output_image: str) -> None:
             logging.warning(f"pid {p.pid} {p.program} has no end time")
         else:
             legitimate_processes.append(p)
-    trace = generate_trace_json(legitimate_processes)
-    with open(output_json, "w") as f:
-        f.write(trace)
 
     plot_processes(legitimate_processes, output_image)
 
@@ -189,10 +139,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse strace log")
     parser.add_argument("--log", type=str, help="strace log file", required=True)
     parser.add_argument(
-        "--output_json", type=str, help="output json file", required=True
-    )
-    parser.add_argument(
         "--output_image", type=str, help="output plot file", required=True
     )
     args = parser.parse_args()
-    main(args.log, args.output_json, args.output_image)
+    main(args.log, args.output_image)
