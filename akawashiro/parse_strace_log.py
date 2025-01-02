@@ -2,6 +2,8 @@ import argparse
 from dataclasses import dataclass
 import logging
 import json
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
@@ -16,6 +18,11 @@ class Process:
     start_time: int
     end_time: int
     program: str
+
+
+def plot_processes(processes: list[Process], image_file: str) -> None:
+    fig = plt.figure()
+    fig.savefig(image_file)
 
 
 def generate_trace_json(processes: list[Process]) -> str:
@@ -65,7 +72,7 @@ def generate_trace_json(processes: list[Process]) -> str:
     return json.dumps(trace_json, indent=4)
 
 
-def main(log_file: str, output: str) -> None:
+def main(log_file: str, output_json: str, output_image: str) -> None:
     # pid -> Process
     processes: dict[int, Process] = {}
     with open(log_file, "r") as f:
@@ -93,13 +100,20 @@ def main(log_file: str, output: str) -> None:
         else:
             legitimate_processes.append(p)
     trace = generate_trace_json(legitimate_processes)
-    with open(output, "w") as f:
+    with open(output_json, "w") as f:
         f.write(trace)
+
+    plot_processes(legitimate_processes, output_image)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse strace log")
     parser.add_argument("--log", type=str, help="strace log file", required=True)
-    parser.add_argument("--output", type=str, help="output json file", required=True)
+    parser.add_argument(
+        "--output_json", type=str, help="output json file", required=True
+    )
+    parser.add_argument(
+        "--output_image", type=str, help="output plot file", required=True
+    )
     args = parser.parse_args()
-    main(args.log, args.output)
+    main(args.log, args.output_json, args.output_image)
