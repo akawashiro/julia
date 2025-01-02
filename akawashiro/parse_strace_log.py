@@ -19,6 +19,7 @@ class Process:
     start_time: int
     end_time: int
     program: str
+    full_command: str
 
 
 def plot_processes(processes: list[Process], image_file: str) -> None:
@@ -104,6 +105,37 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
     fig.savefig(image_file)
 
 
+def parse_execve_line(line: str) -> Process:
+    # Parse execve line of strace output. For example:
+    # 1662893 1735832847 execve("/usr/bin/make", ["make", "O=/tmp/julia_build", "-j", "4"], 0x7ffc0affe6e0 /* 74 vars */) = 0
+    # The first number is the pid, the second number is the time, and the third string is the program name.
+    ws = line.replace("(", " ").replace('"', " ").split()
+    pid = int(ws[0])
+    time = int(ws[1])
+    program = ws[2]
+
+    full_command_in_log = ""
+    in_full_command = False
+    for c in line:
+        if c == "[":
+            in_full_command = True
+        if in_full_command:
+            full_command_in_log += c
+        if c == "]":
+            in_full_command = False
+    full_command = " ".join(
+        full_command_in_log.replace("[", "").replace("]", "").replace('"', "")
+    )
+
+    return Process(
+        pid=pid,
+        start_time=time,
+        end_time=(1 << 32),
+        program=program,
+        full_command=full_command,
+    )
+
+
 def main(log_file: str, output_image: str) -> None:
     # pid -> Process
     processes: dict[int, Process] = {}
@@ -112,12 +144,7 @@ def main(log_file: str, output_image: str) -> None:
             line = line.replace("(", " ").replace('"', " ")
             ws = line.split()
             if len(ws) > 2 and ws[2] == "execve":
-                p = Process(
-                    pid=int(ws[0]),
-                    start_time=int(ws[1]),
-                    end_time=(1 << 32),
-                    program=ws[3],
-                )
+                p = parse_execve_line(line)
                 processes[p.pid] = p
             if len(ws) > 2 and ws[2] == "exit" or ws[2] == "exit_group":
                 if int(ws[0]) in processes:
