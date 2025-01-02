@@ -22,8 +22,12 @@ class Process:
 
 
 def plot_processes(processes: list[Process], image_file: str) -> None:
-    LIMIT_SHORTEST_PROCESS_SEC = 10
-    processes = list(filter(lambda p: p.end_time > p.start_time + LIMIT_SHORTEST_PROCESS_SEC, processes))
+    LIMIT_SHORTEST_PROCESS_SEC = 5
+    processes = list(
+        filter(
+            lambda p: p.end_time > p.start_time + LIMIT_SHORTEST_PROCESS_SEC, processes
+        )
+    )
     processes.sort(key=lambda p: p.start_time)
 
     offset_time = 1 << 32
@@ -51,9 +55,11 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
     fig, ax = plt.subplots(dpi=100, figsize=(128, 6))
     ax.set_xlim(0, max_time - offset_time)
     ax.set_xlabel("Time (sec)")
-    ax.set_xticks(range(0, max_time - offset_time, 100))
+    ax.set_xticks(range(0, max_time - offset_time, 50))
     ax.set_ylim(0, max_vcpu)
     ax.set_yticks([])
+
+    program_to_color: dict[str, str] = {"julia": "blue", "as": "red", "ld": "green"}
 
     for i, p in enumerate(processes):
         s = p.start_time - offset_time
@@ -61,11 +67,16 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
         v = process_to_vcpu[i]
         logging.info(f"{p.program} {s} {e} {v}")
 
+        program_name = os.path.basename(p.program)
         r = patches.Rectangle(
             (s, v),
             e - s,
             1.0,
-            facecolor="none",
+            facecolor=(
+                "none"
+                if program_name not in program_to_color
+                else program_to_color[program_name]
+            ),
             edgecolor="black",
         )
         ax.add_patch(r)
@@ -73,7 +84,10 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
         rx, ry = r.get_xy()
         cx = rx + r.get_width() / 2.0
         cy = ry + r.get_height() / 2.0
-        text = os.path.basename(p.program)
+
+        text = program_name
+        if e - s > 100:
+            text += f" ({e - s} sec)"
         ax.annotate(
             text,
             (cx, cy),
@@ -84,8 +98,9 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
             va="center",
         )
 
-    
-    fig.suptitle(f"Processes shorted than {LIMIT_SHORTEST_PROCESS_SEC} sec are omitted")
+    fig.suptitle(
+        f"Profile of Julia build using 4 vCPUs. Processes shorted than {LIMIT_SHORTEST_PROCESS_SEC} sec are omitted. CPU heavy processes are colored."
+    )
     fig.savefig(image_file)
 
 
