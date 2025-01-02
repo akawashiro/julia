@@ -1,5 +1,6 @@
 import argparse
 from dataclasses import dataclass
+import os
 import logging
 import json
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ import matplotlib.patches as patches
 logging.basicConfig(
     format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%d:%H:%M:%S",
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 
 
@@ -21,7 +22,69 @@ class Process:
 
 
 def plot_processes(processes: list[Process], image_file: str) -> None:
-    fig = plt.figure()
+    LIMIT_SHORTEST_PROCESS_SEC = 10
+    processes = list(filter(lambda p: p.end_time > p.start_time + LIMIT_SHORTEST_PROCESS_SEC, processes))
+    processes.sort(key=lambda p: p.start_time)
+
+    offset_time = 1 << 32
+    max_time = 0
+    for p in processes:
+        s = p.start_time
+        e = p.end_time
+        offset_time = min(offset_time, s)
+        max_time = max(max_time, e)
+    logging.info(
+        f"offset_time: {offset_time}, max_time: {max_time}, duration: {max_time - offset_time}"
+    )
+
+    vcpu_used_times: list[int] = [0] * len(processes)
+    process_to_vcpu: list[int] = [-1] * len(processes)
+    for i, p in enumerate(processes):
+        for j in range(len(vcpu_used_times)):
+            if vcpu_used_times[j] <= p.start_time:
+                vcpu_used_times[j] = p.end_time
+                process_to_vcpu[i] = j
+                break
+    max_vcpu = max(process_to_vcpu) + 1
+    logging.info(f"max_vcpu: {max_vcpu}")
+
+    fig, ax = plt.subplots(dpi=100, figsize=(128, 6))
+    ax.set_xlim(0, max_time - offset_time)
+    ax.set_xlabel("Time (sec)")
+    ax.set_ylim(0, max_vcpu)
+    ax.set_yticks([])
+
+    for i, p in enumerate(processes):
+        s = p.start_time - offset_time
+        e = p.end_time - offset_time
+        v = process_to_vcpu[i]
+        logging.info(f"{p.program} {s} {e} {v}")
+
+        r = patches.Rectangle(
+            (s, v),
+            e - s,
+            1.0,
+            facecolor="none",
+            edgecolor="black",
+        )
+        ax.add_patch(r)
+
+        rx, ry = r.get_xy()
+        cx = rx + r.get_width() / 2.0
+        cy = ry + r.get_height() / 2.0
+        text = os.path.basename(p.program)
+        ax.annotate(
+            text,
+            (cx, cy),
+            color="black",
+            weight="bold",
+            fontsize=6,
+            ha="center",
+            va="center",
+        )
+
+    
+    fig.suptitle(f"Processes shorted than {LIMIT_SHORTEST_PROCESS_SEC} sec are omitted")
     fig.savefig(image_file)
 
 
