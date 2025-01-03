@@ -1,10 +1,11 @@
 import argparse
-from dataclasses import dataclass
-import os
 import logging
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+import os
+from dataclasses import dataclass
 from typing import Any
+
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
