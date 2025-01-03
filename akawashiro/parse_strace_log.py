@@ -127,7 +127,7 @@ def plot_processes(
         rectangle_width_in_pixels = ax_width / (max_time - offset_time) * (e - s)
         rectangle_height_in_pixels = ax_height / max_vcpu
 
-        logging.info(
+        logging.debug(
             f"Process {p.pid} {p.program} {p.full_command} is plotted at ({s}, {v}) with width {rectangle_width_in_pixels} and height {rectangle_height_in_pixels}"
         )
 
