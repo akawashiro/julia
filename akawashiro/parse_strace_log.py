@@ -7,7 +7,7 @@ import matplotlib.patches as patches
 from typing import Any
 
 logging.basicConfig(
-    format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
+    format="%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%d:%H:%M:%S",
     level=logging.INFO,
 )
@@ -23,11 +23,8 @@ class Process:
 
 
 def get_ax_width_and_height_in_pixels(fig: Any, ax: Any) -> tuple[int, int]:
-    # Get the bounding box of the axes in display coordinates
     bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-    # Get width and height in inches
     width, height = bbox.width, bbox.height
-    # Get width and height in pixels
     width_px = width * fig.dpi
     height_px = height * fig.dpi
     return width_px, height_px
@@ -221,14 +218,35 @@ def get_processes_from_log(log_file: str) -> list[Process]:
     return legitimate_processes
 
 
+HELP_MESSAGE="""Generate a profile graph from strace log.
+
+First, you need to generate a strace log file. You can generate a strace log
+file using the following command:
+
+strace \\
+    --output=<path to strace log file> \\
+    --trace=execve,execveat,exit,exit_group \\
+    --follow-forks \\
+    --string-limit=1000 \\
+    --timestamps=unix \\
+    <command to profile>
+
+Then, you can generate a profile graph using the following command:
+
+python parse_strace_log.py \\
+    --log=<path to strace log file> \\
+    --output_image=<path to output image file>
+"""
+
+
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Parse strace log")
+    parser = argparse.ArgumentParser(description=HELP_MESSAGE, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--log", type=str, help="strace log file", required=True)
     parser.add_argument(
         "--output_image", type=str, help="output plot file", required=True
     )
     parser.add_argument(
-        "--minimum_duration",
+        "--minimum_duration_sec",
         type=int,
         help="The minimum duration of a process to be plotted. Shorter processes are omitted.",
         default=5,
@@ -254,7 +272,7 @@ def main() -> None:
     plot_processes(
         processes=processes,
         image_file=args.output_image,
-        minimum_duration=args.minimum_duration,
+        minimum_duration=args.minimum_duration_sec,
         title=title,
         width=args.width,
         height=args.height,
