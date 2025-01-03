@@ -23,7 +23,13 @@ class Process:
 
 
 def plot_processes(
-    processes: list[Process], image_file: str, minimum_duration: int, title: str
+    *,
+    processes: list[Process],
+    image_file: str,
+    minimum_duration: int,
+    title: str,
+    width: int,
+    height: int,
 ) -> None:
     processes = list(
         filter(lambda p: p.end_time > p.start_time + minimum_duration, processes)
@@ -98,9 +104,8 @@ def plot_processes(
             va="center",
         )
 
-    fig.suptitle(
-        title,
-    )
+    logging.debug(f"Saving the plot to {image_file} with title {title}")
+    fig.suptitle(title, fontsize=16, fontweight="bold", color="black")
     fig.savefig(image_file)
 
 
@@ -174,14 +179,32 @@ def main() -> None:
         help="The minimum duration of a process to be plotted. Shorter processes are omitted.",
         default=5,
     )
-    parser.add_argument("--title", type=str, help="Title of the plot. When you don't specify this, the path to the log file is used.", default=None)
+    parser.add_argument(
+        "--title",
+        type=str,
+        help="Title of the plot. When you don't specify this, the path to the log file is used.",
+        default=None,
+    )
+    parser.add_argument(
+        "--width", type=int, help="Width of the figure in pixels", default=12800
+    )
+    parser.add_argument(
+        "--height", type=int, help="Height of the figure in pixels", default=800
+    )
     args = parser.parse_args()
 
     title = args.title
     if title is None:
-        title = os.path.basename(args.log)
+        title = args.log
     processes = get_processes_from_log(args.log)
-    plot_processes(processes, args.output_image, args.minimum_duration, args.title)
+    plot_processes(
+        processes=processes,
+        image_file=args.output_image,
+        minimum_duration=args.minimum_duration,
+        title=title,
+        width=args.width,
+        height=args.height,
+    )
 
 
 if __name__ == "__main__":
