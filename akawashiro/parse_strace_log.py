@@ -22,12 +22,11 @@ class Process:
     full_command: str
 
 
-def plot_processes(processes: list[Process], image_file: str) -> None:
-    LIMIT_SHORTEST_PROCESS_SEC = 5
+def plot_processes(
+    processes: list[Process], image_file: str, minimum_duration: int
+) -> None:
     processes = list(
-        filter(
-            lambda p: p.end_time > p.start_time + LIMIT_SHORTEST_PROCESS_SEC, processes
-        )
+        filter(lambda p: p.end_time > p.start_time + minimum_duration, processes)
     )
     processes.sort(key=lambda p: p.start_time)
 
@@ -163,16 +162,23 @@ def get_processes_from_log(log_file: str) -> list[Process]:
     return legitimate_processes
 
 
-def main(log_file: str, output_image: str) -> None:
-    processes = get_processes_from_log(log_file)
-    plot_processes(processes, output_image)
-
-
-if __name__ == "__main__":
+def main() -> None:
     parser = argparse.ArgumentParser(description="Parse strace log")
     parser.add_argument("--log", type=str, help="strace log file", required=True)
     parser.add_argument(
         "--output_image", type=str, help="output plot file", required=True
     )
+    parser.add_argument(
+        "--minimum_duration",
+        type=int,
+        help="The minimum duration of a process to be plotted. Shorter processes are omitted.",
+        default=5,
+    )
     args = parser.parse_args()
-    main(args.log, args.output_image)
+
+    processes = get_processes_from_log(args.log)
+    plot_processes(processes, args.output_image, args.minimum_duration)
+
+
+if __name__ == "__main__":
+    main()
