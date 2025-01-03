@@ -49,6 +49,25 @@ def gen_text(p: Process, width_px: float, font_size: int) -> str:
         return text[: min(len(text), int(width_px / font_width_in_pixels))] + "..."
 
 
+def gen_color_map(processes: list[Process]) -> dict[str, str]:
+    histogram: dict[str, int] = {}
+    for p in processes:
+        program_name = os.path.basename(p.program)
+        if program_name in histogram:
+            histogram[program_name] += p.end_time - p.start_time
+        else:
+            histogram[program_name] = p.end_time - p.start_time
+    colored_programs = list(histogram.items())
+    colored_programs.sort(key=lambda x: x[1], reverse=True)
+    color_list = ["red", "orange", "yellow", "magenta", "purple", "blue", "cyan", "green"]
+
+    color_map: dict[str, str] = {}
+    for i in range(min(len(colored_programs), len(color_list))):
+        color_map[colored_programs[i][0]] = color_list[i]
+    return color_map
+
+
+
 def plot_processes(
     *,
     processes: list[Process],
@@ -98,7 +117,7 @@ def plot_processes(
     ax.set_ylim(0, max_vcpu)
     ax.set_yticks([])
 
-    program_to_color: dict[str, str] = {"julia": "blue", "as": "red", "ld": "green"}
+    program_to_color: dict[str, str] = gen_color_map(processes)
 
     for i, p in enumerate(processes):
         s = p.start_time - offset_time
