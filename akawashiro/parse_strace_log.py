@@ -33,6 +33,26 @@ def get_ax_width_and_height_in_pixels(fig: Any, ax: Any) -> tuple[int, int]:
     return width_px, height_px
 
 
+def gen_text(p: Process, width_px: float, font_size: int) -> str:
+    # TODO: This is huristic. We need to calculate the width of the text in
+    # pixels.
+    font_width_in_pixels = font_size / 0.6
+
+    text = ""
+    if len(text + os.path.basename(p.program)) * font_width_in_pixels < width_px:
+        text += os.path.basename(p.program)
+    if (
+        len(text + f" ({p.end_time - p.start_time} sec)") * font_width_in_pixels
+        < width_px
+    ):
+        text += f" ({p.end_time - p.start_time} sec)"
+    if len(text + f" (PID: {p.pid})") * font_width_in_pixels < width_px:
+        text += f" (PID: {p.pid})"
+    if len(text + f" {p.full_command}") * font_width_in_pixels < width_px:
+        text += f" {p.full_command}"
+    return text
+
+
 def plot_processes(
     *,
     processes: list[Process],
@@ -113,9 +133,7 @@ def plot_processes(
         cx = rx + r.get_width() / 2.0
         cy = ry + r.get_height() / 2.0
 
-        text = program_name
-        if e - s > 100:
-            text += f" ({e - s} sec) (PID: {p.pid})"
+        text = gen_text(p, rectangle_width_in_pixels, 6)
         ax.annotate(
             text,
             (cx, cy),
