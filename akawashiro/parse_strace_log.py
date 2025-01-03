@@ -23,7 +23,7 @@ class Process:
 
 
 def plot_processes(
-    processes: list[Process], image_file: str, minimum_duration: int
+    processes: list[Process], image_file: str, minimum_duration: int, title: str
 ) -> None:
     processes = list(
         filter(lambda p: p.end_time > p.start_time + minimum_duration, processes)
@@ -50,7 +50,7 @@ def plot_processes(
                 process_to_vcpu[i] = j
                 break
     max_vcpu = max(process_to_vcpu) + 1
-    logging.info(f"max_vcpu: {max_vcpu}")
+    logging.info(f"Maximal number of processes running concurrently: {max_vcpu}")
 
     fig, ax = plt.subplots(dpi=100, figsize=(128, 6))
     ax.set_xlim(0, max_time - offset_time)
@@ -99,7 +99,7 @@ def plot_processes(
         )
 
     fig.suptitle(
-        f"Profile of Julia build using 4 vCPUs. Processes shorted than {LIMIT_SHORTEST_PROCESS_SEC} sec are omitted. CPU heavy processes are colored."
+        title,
     )
     fig.savefig(image_file)
 
@@ -174,10 +174,14 @@ def main() -> None:
         help="The minimum duration of a process to be plotted. Shorter processes are omitted.",
         default=5,
     )
+    parser.add_argument("--title", type=str, help="Title of the plot. When you don't specify this, the path to the log file is used.", default=None)
     args = parser.parse_args()
 
+    title = args.title
+    if title is None:
+        title = os.path.basename(args.log)
     processes = get_processes_from_log(args.log)
-    plot_processes(processes, args.output_image, args.minimum_duration)
+    plot_processes(processes, args.output_image, args.minimum_duration, args.title)
 
 
 if __name__ == "__main__":
