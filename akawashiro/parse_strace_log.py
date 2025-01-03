@@ -165,7 +165,7 @@ def plot_processes(
 
 def parse_execve_line(line: str) -> Process:
     # Parse execve line of strace output. For example:
-    # 1662893 1735832847 execve("/usr/bin/make", ["make", "O=/tmp/julia_build", "-j", "4"], 0x7ffc0affe6e0 /* 74 vars */) = 0
+    # 1662893 1735832847.123456 execve("/usr/bin/make", ["make", "O=/tmp/julia_build", "-j", "4"], 0x7ffc0affe6e0 /* 74 vars */) = 0
     # The first number is the pid, the second number is the time, and the third string is the program name.
     ws = line.replace("(", " ").replace('"', " ").split()
     pid = int(ws[0])
@@ -204,7 +204,7 @@ def get_processes_from_log(log_file: str) -> list[Process]:
                 processes[p.pid] = p
             if len(ws) > 2 and ws[2] == "exit" or ws[2] == "exit_group":
                 if int(ws[0]) in processes:
-                    processes[int(ws[0])].end_time = int(ws[1])
+                    processes[int(ws[0])].end_time = float(ws[1])
                 else:
                     logging.warning(
                         f"Cannot find execve corresponding to PID {int(ws[0])}"
