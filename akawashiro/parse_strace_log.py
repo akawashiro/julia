@@ -36,17 +36,18 @@ def get_ax_width_and_height_in_pixels(fig: Any, ax: Any) -> tuple[int, int]:
 def gen_text(p: Process, width_px: float, font_size: int) -> str:
     # TODO: This is huristic. We need to calculate the width of the text in
     # pixels.
-    font_width_in_pixels = font_size * 1.5
+    font_width_in_pixels = font_size * 1
+    n_chars = int(width_px / font_width_in_pixels)
 
     text = os.path.basename(p.program)
     text += f" ({p.end_time - p.start_time} sec)"
     text += f" (PID: {p.pid})"
     text += f" (cmd: {p.full_command})"
 
-    if len(text) * font_width_in_pixels < width_px:
+    if len(text) <= n_chars:
         return text
     else:
-        return text[: min(len(text), int(width_px / font_width_in_pixels))] + "..."
+        return text[: min(len(text), n_chars)] + "..."
 
 
 def gen_color_map(processes: list[Process]) -> dict[str, str]:
