@@ -66,7 +66,7 @@ def plot_processes(processes: list[Process], image_file: str) -> None:
         s = p.start_time - offset_time
         e = p.end_time - offset_time
         v = process_to_vcpu[i]
-        logging.info(f"{p.program} {s} {e} {v}")
+        logging.debug(f"{p.program} {s} {e} {v}")
 
         program_name = os.path.basename(p.program)
         r = patches.Rectangle(
@@ -112,7 +112,7 @@ def parse_execve_line(line: str) -> Process:
     ws = line.replace("(", " ").replace('"', " ").split()
     pid = int(ws[0])
     time = int(ws[1])
-    program = ws[2]
+    program = ws[3]
 
     full_command_in_log = ""
     in_full_command = False
@@ -136,8 +136,8 @@ def parse_execve_line(line: str) -> Process:
     )
 
 
-def main(log_file: str, output_image: str) -> None:
-    # pid -> Process
+def get_processes_from_log(log_file: str) -> list[Process]:
+    # Key: PID, Value: Process
     processes: dict[int, Process] = {}
     with open(log_file, "r") as f:
         for line in f:
@@ -150,7 +150,9 @@ def main(log_file: str, output_image: str) -> None:
                 if int(ws[0]) in processes:
                     processes[int(ws[0])].end_time = int(ws[1])
                 else:
-                    logging.warning(f"pid {int(ws[0])} not found")
+                    logging.warning(
+                        f"Cannot find execve corresponding to PID {int(ws[0])}"
+                    )
 
     legitimate_processes: list[Process] = []
     for p in processes.values():
@@ -158,8 +160,12 @@ def main(log_file: str, output_image: str) -> None:
             logging.warning(f"pid {p.pid} {p.program} has no end time")
         else:
             legitimate_processes.append(p)
+    return legitimate_processes
 
-    plot_processes(legitimate_processes, output_image)
+
+def main(log_file: str, output_image: str) -> None:
+    processes = get_processes_from_log(log_file)
+    plot_processes(processes, output_image)
 
 
 if __name__ == "__main__":
