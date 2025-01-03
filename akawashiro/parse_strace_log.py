@@ -106,7 +106,6 @@ def plot_processes(
     # Matplotlib cannot set the size of the figure in pixels, so we need to set
     # the size in inches and dpi.
     fig, ax = plt.subplots(dpi=100, figsize=(width / 100, height / 100))
-    fig.tight_layout(w_pad=0, h_pad=0)
 
     ax_width, ax_height = get_ax_width_and_height_in_pixels(fig, ax)
     logging.debug(f"The size of the axes in pixels: {ax_width} x {ax_height}")
@@ -161,6 +160,7 @@ def plot_processes(
 
     logging.debug(f"Saving the plot to {image_file} with title {title}")
     fig.suptitle(title, fontsize=16, fontweight="bold", color="black")
+    fig.tight_layout()
     fig.savefig(image_file)
 
 
