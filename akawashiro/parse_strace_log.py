@@ -17,8 +17,8 @@ logging.basicConfig(
 @dataclass
 class Process:
     pid: int
-    start_time: int
-    end_time: int
+    start_time: float
+    end_time: float
     program: str
     full_command: str
 
@@ -38,7 +38,7 @@ def gen_text(p: Process, width_px: float, font_size: int) -> str:
     n_chars = int(width_px / font_width_in_pixels) - 1
 
     text = os.path.basename(p.program)
-    text += f" ({p.end_time - p.start_time} sec)"
+    text += f" ({int(p.end_time - p.start_time)} sec)"
     text += f" (PID: {p.pid})"
     text += f" (cmd: {p.full_command})"
 
@@ -49,7 +49,7 @@ def gen_text(p: Process, width_px: float, font_size: int) -> str:
 
 
 def gen_color_map(processes: list[Process]) -> dict[str, str]:
-    histogram: dict[str, int] = {}
+    histogram: dict[str, float] = {}
     for p in processes:
         program_name = os.path.basename(p.program)
         if program_name in histogram:
@@ -92,7 +92,7 @@ def plot_processes(
         f"offset_time: {offset_time}, max_time: {max_time}, duration: {max_time - offset_time}"
     )
 
-    vcpu_used_times: list[int] = [0] * len(processes)
+    vcpu_used_times: list[float] = [0] * len(processes)
     process_to_vcpu: list[int] = [-1] * len(processes)
     for i, p in enumerate(processes):
         for j in range(len(vcpu_used_times)):
@@ -112,7 +112,7 @@ def plot_processes(
 
     ax.set_xlim(0, max_time - offset_time)
     ax.set_xlabel("Time (sec)")
-    ax.set_xticks(range(0, max_time - offset_time, 50))
+    ax.set_xticks(range(0, int(max_time - offset_time), 50))
     ax.set_ylim(0, max_vcpu)
     ax.set_yticks([])
 
@@ -169,7 +169,7 @@ def parse_execve_line(line: str) -> Process:
     # The first number is the pid, the second number is the time, and the third string is the program name.
     ws = line.replace("(", " ").replace('"', " ").split()
     pid = int(ws[0])
-    time = int(ws[1])
+    time = float(ws[1])
     program = ws[3]
 
     full_command_in_log = ""
@@ -230,6 +230,7 @@ strace \\
     --follow-forks \\
     --string-limit=1000 \\
     --timestamps=unix \\
+    --absolute-timestamps=format:unix,precision:us \\
     <command to profile>
 
 Then, you can generate a profile graph using the following command:
