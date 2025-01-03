@@ -36,21 +36,17 @@ def get_ax_width_and_height_in_pixels(fig: Any, ax: Any) -> tuple[int, int]:
 def gen_text(p: Process, width_px: float, font_size: int) -> str:
     # TODO: This is huristic. We need to calculate the width of the text in
     # pixels.
-    font_width_in_pixels = font_size / 0.6
+    font_width_in_pixels = font_size * 1.5
 
-    text = ""
-    if len(text + os.path.basename(p.program)) * font_width_in_pixels < width_px:
-        text += os.path.basename(p.program)
-    if (
-        len(text + f" ({p.end_time - p.start_time} sec)") * font_width_in_pixels
-        < width_px
-    ):
-        text += f" ({p.end_time - p.start_time} sec)"
-    if len(text + f" (PID: {p.pid})") * font_width_in_pixels < width_px:
-        text += f" (PID: {p.pid})"
-    if len(text + f" {p.full_command}") * font_width_in_pixels < width_px:
-        text += f" {p.full_command}"
-    return text
+    text = os.path.basename(p.program)
+    text += f" ({p.end_time - p.start_time} sec)"
+    text += f" (PID: {p.pid})"
+    text += f" (cmd: {p.full_command})"
+
+    if len(text) * font_width_in_pixels < width_px:
+        return text
+    else:
+        return text[: min(len(text), int(width_px / font_width_in_pixels))] + "..."
 
 
 def plot_processes(
@@ -167,9 +163,7 @@ def parse_execve_line(line: str) -> Process:
             full_command_in_log += c
         if c == "]":
             in_full_command = False
-    full_command = "".join(
-        full_command_in_log.replace("[", "").replace("]", "").replace('"', "")
-    )
+    full_command = full_command_in_log.replace("[", "").replace("]", "").replace('"', "").replace(",", "")
 
     return Process(
         pid=pid,
