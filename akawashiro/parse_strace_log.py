@@ -2,9 +2,9 @@ import argparse
 from dataclasses import dataclass
 import os
 import logging
-import json
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from typing import Any
 
 logging.basicConfig(
     format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
@@ -20,6 +20,17 @@ class Process:
     end_time: int
     program: str
     full_command: str
+
+
+def get_ax_width_and_height_in_pixels(fig: Any, ax: Any) -> tuple[int, int]:
+    # Get the bounding box of the axes in display coordinates
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    # Get width and height in inches
+    width, height = bbox.width, bbox.height
+    # Get width and height in pixels
+    width_px = width * fig.dpi
+    height_px = height * fig.dpi
+    return width_px, height_px
 
 
 def plot_processes(
@@ -58,7 +69,13 @@ def plot_processes(
     max_vcpu = max(process_to_vcpu) + 1
     logging.info(f"Maximal number of processes running concurrently: {max_vcpu}")
 
-    fig, ax = plt.subplots(dpi=100, figsize=(128, 6))
+    # Matplotlib cannot set the size of the figure in pixels, so we need to set
+    # the size in inches and dpi.
+    fig, ax = plt.subplots(dpi=100, figsize=(width / 100, height / 100))
+
+    ax_width, ax_height = get_ax_width_and_height_in_pixels(fig, ax)
+    logging.debug(f"The size of the axes in pixels: {ax_width} x {ax_height}")
+
     ax.set_xlim(0, max_time - offset_time)
     ax.set_xlabel("Time (sec)")
     ax.set_xticks(range(0, max_time - offset_time, 50))
@@ -71,7 +88,12 @@ def plot_processes(
         s = p.start_time - offset_time
         e = p.end_time - offset_time
         v = process_to_vcpu[i]
-        logging.debug(f"{p.program} {s} {e} {v}")
+        rectangle_width_in_pixels = ax_width / (max_time - offset_time) * (e - s)
+        rectangle_height_in_pixels = ax_height / max_vcpu
+
+        logging.info(
+            f"Process {p.pid} {p.program} {p.full_command} is plotted at ({s}, {v}) with width {rectangle_width_in_pixels} and height {rectangle_height_in_pixels}"
+        )
 
         program_name = os.path.basename(p.program)
         r = patches.Rectangle(
@@ -127,7 +149,7 @@ def parse_execve_line(line: str) -> Process:
             full_command_in_log += c
         if c == "]":
             in_full_command = False
-    full_command = " ".join(
+    full_command = "".join(
         full_command_in_log.replace("[", "").replace("]", "").replace('"', "")
     )
 
